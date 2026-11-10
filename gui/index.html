@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>On-Demand Network Slicing</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>On-Demand Network Slicing</h1>
+      <p class="sub">Ryu SDN controller &middot; Open vSwitch &middot; ComNetsEmu</p>
+    </div>
+    <div class="status">
+      <span id="ctrl-dot" class="dot"></span>
+      <span id="ctrl-text">connecting&hellip;</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card topo">
+      <div class="card-head">
+        <h2>Topology</h2>
+        <span class="hint">link labels: live load in Mbit/s (&rarr; / &larr;)</span>
+      </div>
+      <svg id="topology" viewBox="0 0 800 540" role="img" aria-label="Network topology"></svg>
+      <div class="legend" id="topo-legend"></div>
+    </section>
+
+    <section class="card slices">
+      <div class="card-head">
+        <h2>Slices</h2>
+        <button id="reset" class="ghost">Deactivate all</button>
+      </div>
+      <div id="slice-list"></div>
+      <div id="toast" class="toast" hidden></div>
+    </section>
+
+    <section class="card chart">
+      <div class="card-head">
+        <h2>Slice throughput</h2>
+        <span class="hint">measured at the ingress switch, last 60 s</span>
+      </div>
+      <div class="chart-wrap">
+        <svg id="chart" viewBox="0 0 640 250" role="img" aria-label="Slice throughput over time"></svg>
+        <div id="tooltip" class="tooltip" hidden></div>
+      </div>
+      <div class="legend" id="chart-legend"></div>
+    </section>
+
+    <section class="card reservation">
+      <div class="card-head">
+        <h2>Link reservation</h2>
+        <span class="hint">share of each link reserved by active slices</span>
+      </div>
+      <div id="reservation"></div>
+    </section>
+
+    <section class="card events">
+      <div class="card-head"><h2>Controller events</h2></div>
+      <ol id="events"></ol>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

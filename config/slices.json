@@ -1,0 +1,47 @@
+{
+  "_comment": "Slice templates. Each slice is identified by its flows (endpoints + traffic class), its topology (explicit switch path) and its share of the capacity of every link on that path.",
+
+  "video": {
+    "label": "Video streaming",
+    "type": "eMBB",
+    "queue": 1,
+    "color": "#2a78d6",
+    "endpoints": { "clients": ["h1"], "servers": ["h4"] },
+    "traffic": { "proto": "udp" },
+    "path": ["s1", "s2", "s4"],
+    "share": 60
+  },
+
+  "control": {
+    "label": "Industrial control",
+    "type": "URLLC",
+    "queue": 2,
+    "color": "#eb6834",
+    "endpoints": { "clients": ["h2"], "servers": ["h5"] },
+    "traffic": { "proto": "any" },
+    "path": ["s1", "s3", "s4"],
+    "share": 30
+  },
+
+  "iot": {
+    "label": "IoT to edge cloud",
+    "type": "mMTC",
+    "queue": 3,
+    "color": "#1baf7a",
+    "endpoints": { "clients": ["h3"], "servers": ["h6"] },
+    "traffic": { "proto": "any" },
+    "path": ["s1", "s3", "s5"],
+    "share": 50
+  },
+
+  "backup": {
+    "label": "Nightly backup",
+    "type": "bulk",
+    "queue": 4,
+    "color": "#eda100",
+    "endpoints": { "clients": ["h1"], "servers": ["h4"] },
+    "traffic": { "proto": "tcp", "port": 5201 },
+    "path": ["s1", "s3", "s4"],
+    "share": 40
+  }
+}

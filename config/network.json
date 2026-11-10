@@ -1,0 +1,31 @@
+{
+  "_comment": "Physical infrastructure. Edge switches host end devices and enforce slice queues on their uplinks; core switches emulate link capacity and propagation delay.",
+  "controller": { "ip": "127.0.0.1", "port": 6633 },
+
+  "best_effort": { "min_share": 10 },
+
+  "switches": {
+    "s1": { "dpid": 1, "role": "edge", "pos": [120, 230] },
+    "s2": { "dpid": 2, "role": "core", "pos": [400, 90] },
+    "s3": { "dpid": 3, "role": "core", "pos": [400, 330] },
+    "s4": { "dpid": 4, "role": "edge", "pos": [660, 230] },
+    "s5": { "dpid": 5, "role": "edge", "pos": [400, 470] }
+  },
+
+  "links": [
+    { "id": "A1", "ends": ["s1", "s2"], "bw": 20, "delay": 10, "cost": 1 },
+    { "id": "A2", "ends": ["s2", "s4"], "bw": 20, "delay": 10, "cost": 1 },
+    { "id": "B1", "ends": ["s1", "s3"], "bw": 10, "delay": 2,  "cost": 2 },
+    { "id": "B2", "ends": ["s3", "s4"], "bw": 10, "delay": 2,  "cost": 2 },
+    { "id": "M1", "ends": ["s3", "s5"], "bw": 10, "delay": 1,  "cost": 1 }
+  ],
+
+  "hosts": {
+    "h1": { "switch": "s1", "ip": "10.0.0.1", "role": "video client",   "pos": [30, 140] },
+    "h2": { "switch": "s1", "ip": "10.0.0.2", "role": "robot / PLC",    "pos": [30, 230] },
+    "h3": { "switch": "s1", "ip": "10.0.0.3", "role": "IoT gateway",    "pos": [30, 320] },
+    "h4": { "switch": "s4", "ip": "10.0.0.4", "role": "video server",   "pos": [745, 170] },
+    "h5": { "switch": "s4", "ip": "10.0.0.5", "role": "control server", "pos": [745, 290] },
+    "h6": { "switch": "s5", "ip": "10.0.0.6", "role": "MEC server",     "pos": [520, 470] }
+  }
+}
