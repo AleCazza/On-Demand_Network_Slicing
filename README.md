@@ -1,11 +1,11 @@
 # On-Demand SDN Slicing in ComNetsEmu
 
-Project for *Networking (mod. 2)*, University of Trento, A.Y. 2025/26 — Alessandro Cazzaniga
+Project for Networking (mod. 2), held by Professor Granelli at University of Trento, Student: Alessandro Cazzaniga
 
 Network slices that can be **activated and deactivated at runtime** from a CLI,
 a web GUI or a REST API, with a single Ryu SDN controller. Every slice is a
-template that states its **flows**, its **topology** (the switch path it is
-pinned to) and the **share of link capacity** it is guaranteed. The controller
+template that states its flows, its topology (the switch path it is
+pinned to) and its guaranteed share of link capacity. The controller
 enforces the templates with OpenFlow 1.3 rules and Open vSwitch HTB queues, and
 refuses activations that would over-book a link (admission control).
 
@@ -52,7 +52,8 @@ Pick one option. All the details are on the
 2. *File → Import Appliance*, choose the `.ova`, keep the defaults.
 3. Before the first boot, open *Settings → Network*:
    - **Adapter 2**: untick *Enable Network Adapter* if VirtualBox reports
-     invalid settings (recent versions no longer support its host-only mode);
+     invalid settings (I found out while installing that 
+     recent versions no longer support its host-only mode);
    - **Adapter 1 (NAT) → Port Forwarding**: add two TCP rules,
      host `2222` → guest `22` (SSH) and host `8080` → guest `8080` (GUI).
 4. Start the VM. User and password: `comnetsemu` / `comnetsemu`.
@@ -79,8 +80,8 @@ The GUI is then at `http://<ip from multipass info comnetsemu>:8080/`.
 Inside the VM:
 
 ```bash
-git clone https://github.com/<user>/ondemand-sdn-slicing.git
-cd ondemand-sdn-slicing
+git clone https://github.com/AleCazza/On-Demand_Network_Slicing.git
+cd On-Demand_Network_Slicing
 python3 -m unittest discover -s tests       # 25 tests, must end with OK
 ```
 
@@ -122,20 +123,17 @@ Then:
 
 ## 4. Scenarios step by step
 
-All the commands below are typed at the `slicing>` prompt. The numbers are
-the ones measured in the ComNetsEmu VM.
+All the commands below are typed at the `slicing>` prompt; the screenshots
+show the output measured in the ComNetsEmu VM.
 
 ### 4.1 Baseline: best effort only
 
 ```
-slicing> pingall
-*** Results: 0% dropped (30/30 received)
-slicing> slice list
-  [off] video    eMBB   UDP                    s1-s2-s4  60%  h1<->h4
-  [off] control  URLLC  all IP traffic         s1-s3-s4  30%  h2<->h5
-  [off] iot      mMTC   all IP traffic         s1-s3-s5  50%  h3<->h6
-  [off] backup   bulk   TCP port 5201          s1-s3-s4  40%  h1<->h4
+pingall
+slice list
 ```
+
+<p align="center"><img src="docs/img/s1-baseline.png" width="560" alt="pingall with 0% dropped and the four slices listed as off"></p>
 
 With no slice active every host reaches every other one over the cheapest
 path; between s1 and s4 that is path A.
@@ -143,25 +141,24 @@ path; between s1 and s4 that is path A.
 ### 4.2 Control slice (URLLC): a different path
 
 ```
-slicing> h2 ping -c 5 h5
-rtt min/avg/max/mdev = 21.016/21.572/22.064/0.394 ms
-slicing> slice on control
-  slice control activated (all IP traffic, path s1-s3-s4, 30% of each link)
-slicing> h2 ping -c 5 h5
-rtt min/avg/max/mdev = 5.034/5.499/5.902/0.330 ms
+h2 ping -c 5 h5
+slice on control
+h2 ping -c 5 h5
 ```
 
+<p align="center"><img src="docs/img/s2-control.png" width="600" alt="RTT from h2 to h5 drops from 21.5 ms to 5.8 ms after activating the control slice"></p>
+
 The slice moves h2 ↔ h5 from path A (≈ 2 × 10 ms) to path B (≈ 2 × 2 ms) and
-into its own queue.
+into its own queue: the average RTT drops from 21.5 ms to 5.8 ms.
 
 ### 4.3 Video slice (eMBB): a guaranteed and capped share
 
 ```
-slicing> slice on video
-  slice video activated (UDP, path s1-s2-s4, 60% of each link)
-slicing> iperfudp 15M h1 h4
-*** Results: ['15M', '11.6 Mbits/sec', '11.6 Mbits/sec']
+slice on video
+iperfudp 15M h1 h4
 ```
+
+<p align="center"><img src="docs/img/s3-video.png" width="500" alt="iperf UDP at 15 Mbit/s from h1 to h4 delivers 11.6 Mbit/s with the video slice active"></p>
 
 h1 sends 15 Mbit/s but the slice owns 60 % of the 20 Mbit/s link: 12 Mbit/s on
 the wire, 11.67 Mbit/s of UDP payload (12 × 1470 / 1512).
@@ -169,7 +166,7 @@ the wire, 11.67 Mbit/s of UDP payload (12 × 1470 / 1512).
 ### 4.4 Same hosts, different service
 
 ```
-slicing> iperf h1 h4
+iperf h1 h4
 ```
 
 TCP between h1 and h4 is **not** part of the video slice (UDP only), so it
@@ -179,21 +176,29 @@ slice, pinned to path B.
 ### 4.5 Admission control
 
 ```
-slicing> slice on iot
-  slice iot activated (all IP traffic, path s1-s3-s5, 50% of each link)
-slicing> slice on backup
-  error: slice backup rejected: link B1 (s1-s3) would be 120% reserved (max 90%), already used by control, iot
-slicing> slice off iot
-slicing> slice on backup
-  slice backup activated (TCP port 5201, path s1-s3-s4, 40% of each link)
+slice on iot
+slice on backup
+slice off iot
+slice on backup
 ```
+
+<p align="center"><img src="docs/img/s4-admission.png" width="760" alt="backup is rejected because link B1 would be 120% reserved, then accepted after iot is deactivated"></p>
+
+With `control` and `iot` active, link B1 is 80 % reserved: `backup` (40 %)
+would take it to 120 % and is rejected with the reason. After `slice off iot`
+the link is at 30 % and `backup` is accepted.
 
 ### 4.6 From the GUI
 
-Open the GUI while the network runs: switch slices on and off with the toggles,
-watch the active slices drawn on their links, the live load of every link, the
-reservation bars against the 90 % limit, per-slice throughput and the
-controller log. A rejected activation shows the controller's reason.
+Open **http://localhost:8080/** while the network runs:
+
+<p align="center"><img src="docs/img/gui.png" width="800" alt="Web GUI: active slices drawn on their links, slice toggles and link reservation against the 90% limit"></p>
+
+Each active slice is drawn on the links of its path, next to their live load;
+every slice has a toggle; the reservation bars show how much of each link is
+booked against the 90 % admission limit (here B1 and B2 carry control and
+backup, 70 %). The page also shows per-slice throughput and the controller
+log, where a rejected activation appears with its reason.
 
 `slice stats`, `slice off <name>` and `slice reset` complete the CLI.
 
