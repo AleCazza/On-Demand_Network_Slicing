@@ -45,7 +45,7 @@ Optional: `matplotlib`, only to draw the experiment plots.
 Pick one option. All the details are on the
 [ComNetsEmu labs page](https://www.granelli-lab.org/researches/relevant-projects/comnetsemu-labs).
 
-**Option A — VirtualBox (Windows, Linux, Intel Macs)**
+**Option A (Suggested) — VirtualBox (Windows, Linux, Intel Macs)**
 
 1. Install [VirtualBox](https://www.virtualbox.org) and download the
    [ComNetsEmu OVA](https://drive.google.com/file/d/1oFTokNAA7XEtdTQTV9sJdilWJsmsPilj/view?usp=sharing).
@@ -192,7 +192,7 @@ Templates are validated at start-up and every problem is reported at once.
 ### Architecture
 
 ```
-   CLI (slicectl, Mininet "slice")      Web GUI
+       CLI ("slice" command)                    Web GUI
                   └────── REST (northbound) ──────┘
                                 ▼
       Ryu: slice_controller.py — admission control · rules · statistics
@@ -332,16 +332,6 @@ To redraw the plots on another machine:
 
 **Mininet CLI** — `slice list | on NAME | off NAME | reset | stats`
 
-**Standalone CLI** (second terminal):
-
-```bash
-./cli/slicectl.py list
-./cli/slicectl.py on video control
-./cli/slicectl.py stats --watch
-./cli/slicectl.py status          # switches, active slices, recent events
-./cli/slicectl.py off video
-```
-
 **REST API** (port 8080):
 
 | method | path | answer |
@@ -368,7 +358,6 @@ slicing/rules.py             OpenFlow rules for best effort and slices
 slicing/client.py            REST client shared by the CLIs
 controller/slice_controller.py   Ryu app: rules, REST API, statistics, GUI hosting
 network/topology.py          Mininet network, netem/HTB provisioning, `slice` command
-cli/slicectl.py              standalone CLI
 gui/                         web interface (HTML, CSS, vanilla JS), served by Ryu
 experiments/                 automated measurements and plots
 tests/                       unit tests and flow-table simulator
@@ -392,7 +381,7 @@ reconnection and throughput measurement.
 | symptom | fix |
 |---|---|
 | `controller is not responding` at start-up | read the last lines of `controller.log`, then `./clean.sh` and retry |
-| `pingall` loses packets | `./cli/slicectl.py status` must list 5 of 5 switches |
+| `pingall` loses packets | `slice list` must answer and `controller.log` must show 5 switches connected |
 | `Address already in use` (6633 / 8080) | a previous controller is still running: `./clean.sh` |
 | `command failed: ovs-vsctl ...` | leftovers of an interrupted run: `./clean.sh` |
 | throughput above the share | the QoS was not applied: `sudo ovs-vsctl list qos` must show 5 entries |
