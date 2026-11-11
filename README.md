@@ -233,6 +233,36 @@ To redraw the plots on another machine:
 
 ## 6. How it works
 
+### Design choices
+
+**Slicing model: service slicing.** The ComNetsEmu examples used in the course
+([realizing_network_slicing](https://github.com/stevelorenz/comnetsemu/tree/master/app/realizing_network_slicing))
+show two ways to slice a network. *Topology slicing* splits the hosts into
+isolated groups, each confined to its own path, so hosts of different slices
+cannot reach each other. *Service slicing* classifies traffic by service (e.g.
+video on a given UDP port) and gives each service its own path and resources,
+while the rest of the traffic still flows. This project follows the second
+model, closer to the service-oriented definition of a 5G slice: a slice adds
+guarantees (path, queue, share of capacity) to a service, it does not cut
+hosts off. Isolation is about performance — a slice can never take capacity
+from another one — and traffic outside the active slices stays reachable in
+best effort, which is why `pingall` always reports 0 % loss. On top of the
+reference example, slices here are templates, can be switched on and off at
+runtime, are sized as a percentage of each link and pass admission control.
+
+**Topology: the reference diamond, extended.** The network starts from the
+two-path diamond of the course example (s1 to s4 through s2 or s3) and adds:
+
+- **opposite trade-offs on the two paths** — A has capacity (20 Mbit/s, 10 ms
+  per hop), B has low latency (10 Mbit/s, 2 ms) — so choosing the path is a
+  real decision for a slice, as between eMBB and URLLC in 5G;
+- **an edge-cloud branch** (s3 to s5 with server h6), the MEC site used by
+  the IoT slice;
+- **a split between edge and core switches**: slice queues live on the edge
+  uplinks, which every flow crosses first in both directions, while the core
+  switches emulate capacity and delay with netem. The two never share a port,
+  because OVS replaces the qdisc of the ports it shapes.
+
 ### Topology
 
 | element | role |
@@ -242,11 +272,6 @@ To redraw the plots on another machine:
 | path A `s1-s2-s4` | 20 Mbit/s, 10 ms per hop: capacity |
 | path B `s1-s3-s4` | 10 Mbit/s, 2 ms per hop: low latency |
 | branch `s3-s5` | edge-cloud (MEC) site with server `h6` |
-
-Two disjoint paths between the same edges make the *topology* of a slice
-meaningful. Queues live on the edge uplinks because every flow, in both
-directions, crosses one of them first; netem lives on the core because OVS
-replaces the qdisc of the ports it shapes.
 
 ### Slice templates
 
