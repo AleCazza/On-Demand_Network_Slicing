@@ -82,7 +82,7 @@ Inside the VM:
 ```bash
 git clone https://github.com/AleCazza/On-Demand_Network_Slicing.git
 cd On-Demand_Network_Slicing
-python3 -m unittest discover -s tests       # 25 tests, must end with OK
+python3 -m unittest discover -s tests       # 18 tests, must end with OK
 ```
 
 Optional, for the plots:
@@ -369,12 +369,10 @@ run.sh, clean.sh             start / clean up
 python3 -m unittest discover -s tests -v
 ```
 
-The tests run without Mininet or Ryu: `tests/fake_ryu.py` stands in for the
-Ryu API (and enforces the match prerequisites that OVS checks), and
+The tests run without Mininet or Ryu: tests/flowsim.py walks packets through the generated flow tables.
 `tests/flowsim.py` walks packets through the generated flow tables. They check
 full connectivity for every admissible combination of active slices, the path
-and queue of each slice, cookie-based removal, admission control, switch
-reconnection and throughput measurement.
+and queue of each slice, cookie-based removal and admission control.
 
 ## 9. Troubleshooting
 
